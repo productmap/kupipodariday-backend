@@ -19,14 +19,14 @@ export class Offer {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => Wish, (wish) => wish.offers)
-  item: Wish;
-
   @Column()
   amount: number;
 
   @Column({ default: false })
   hidden: boolean;
+
+  @ManyToOne(() => Wish, (wish) => wish.offers)
+  item: Wish;
 
   @OneToMany(() => User, (user) => user.offers)
   user: User;

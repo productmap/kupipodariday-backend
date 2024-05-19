@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -42,7 +43,7 @@ export class Wish {
   @Column()
   description: string;
 
-  @OneToOne(() => User, (user) => user.wishes)
+  @ManyToOne(() => User, (user) => user.wishes)
   owner: User;
 
   @OneToMany(() => Offer, (offer) => offer.item)

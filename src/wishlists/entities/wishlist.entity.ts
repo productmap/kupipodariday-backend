@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -31,5 +32,6 @@ export class Wishlist {
   owner: User;
 
   @ManyToMany(() => Wish, (wish) => wish.name)
+  @JoinTable()
   items: Wish[];
 }
