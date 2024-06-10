@@ -1,31 +1,35 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { WishesService } from './wishes.service';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('wishes')
 export class WishesController {
   constructor(private readonly wishesService: WishesService) {}
 
   @Post()
-  create(@Body() createWishDto: CreateWishDto) {
-    return this.wishesService.create(createWishDto);
+  create(@Req() req: any, @Body() createWishDto: CreateWishDto) {
+    return this.wishesService.create(req.user, createWishDto);
   }
 
-  @Get()
+  @Get('top')
   getTop() {
     return this.wishesService.getTop();
   }
 
-  @Get()
+  @Get('last')
   getLast() {
     return this.wishesService.getLast();
   }
@@ -36,17 +40,21 @@ export class WishesController {
   }
 
   @Patch(':id')
-  updateById(@Param('id') id: number, @Body() updateWishDto: UpdateWishDto) {
-    return this.wishesService.updateById(+id, updateWishDto);
+  updateOne(
+    @Req() req: any,
+    @Param('id') id: number,
+    @Body() updateWishDto: UpdateWishDto,
+  ) {
+    return this.wishesService.updateById(req.user, id, updateWishDto);
   }
 
   @Delete(':id')
-  deleteById(@Param('id') id: string) {
-    return this.wishesService.deleteById(+id);
+  deleteOne(@Req() req: any, @Param('id') id: number) {
+    return this.wishesService.deleteById(req.user, id);
   }
 
   @Post(':id/copy')
-  copy(@Param('id') id: number, @Body() updateWishDto: UpdateWishDto) {
-    return this.wishesService.copy(+id, updateWishDto);
+  copy(@Req() req: any, @Param('id') id: number) {
+    return this.wishesService.copy(req.user, id);
   }
 }

@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Offer } from '../../offers/entities/offer.entity';
+import { IsUrl } from 'class-validator';
 
 @Entity()
 export class Wish {
@@ -22,25 +23,27 @@ export class Wish {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column({ unique: true })
+  @Column()
   name: string;
 
   @Column()
+  @IsUrl()
   link: string;
 
   @Column()
+  @IsUrl()
   image: string;
 
   @Column()
   price: number;
 
-  @Column()
+  @Column({ default: 0 })
   raised: number;
 
-  @Column()
+  @Column({ default: 0 })
   copied: number;
 
-  @Column()
+  @Column({ default: '' })
   description: string;
 
   @ManyToOne(() => User, (user) => user.wishes)

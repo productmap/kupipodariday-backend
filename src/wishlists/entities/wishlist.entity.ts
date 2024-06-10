@@ -31,7 +31,7 @@ export class Wishlist {
   @ManyToOne(() => User, (user) => user.wishlists)
   owner: User;
 
-  @ManyToMany(() => Wish, (wish) => wish.name)
+  @ManyToMany(() => Wish)
   @JoinTable()
   items: Wish[];
 }

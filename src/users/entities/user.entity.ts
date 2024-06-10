@@ -21,10 +21,10 @@ export class User {
   @Column()
   about: string;
 
-  @Column()
+  @Column({ default: 'https://i.pravatar.cc/300' })
   avatar: string;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
 
   @CreateDateColumn()

@@ -1,18 +1,20 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
   Param,
-  Delete,
+  Patch,
+  Post,
   Req,
-  BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FindUsersDto } from './dto/find-user.dto';
 
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -24,30 +26,36 @@ export class UsersController {
 
   @Get('me')
   async getMe(@Req() req) {
-    if (!req.user) {
-      throw new BadRequestException('User not found');
-    }
-
-    const user = await this.usersService.findById(req.user.id);
-
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-    return user;
+    return req.user;
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: number) {
-    return this.usersService.findById(id);
+  @Patch('me')
+  async updateMe(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.updateOne(req.user.id, updateUserDto);
   }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @Get('me/wishes')
+  async getMyWishes(@Req() req: any) {
+    return this.usersService.findUserWishes({ id: req.user.id });
   }
 
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @Get(':username')
+  getUserByUsername(@Param('username') username: string) {
+    return this.usersService.findByUsername({
+      query: username,
+    });
+  }
+
+  @Get(':username/wishes')
+  async getUserWishes(@Param('username') username: string) {
+    const user = await this.usersService.findByUsername({
+      query: username,
+    });
+    return this.usersService.findUserWishes(user);
+  }
+
+  @Post('find')
+  async getUserByLogin(@Body() findUserDto: FindUsersDto) {
+    return this.usersService.findByUsername(findUserDto);
   }
 }

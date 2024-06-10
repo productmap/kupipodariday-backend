@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -17,9 +18,16 @@ import { User } from './users/entities/user.entity';
 import { Wish } from './wishes/entities/wish.entity';
 import { Wishlist } from './wishlists/entities/wishlist.entity';
 import { Offer } from './offers/entities/offer.entity';
+import { JwtStrategy } from './strategies/jwt.strategy';
+
+import config from './config/production.config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [config],
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: '127.0.0.1',
@@ -34,7 +42,7 @@ import { Offer } from './offers/entities/offer.entity';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: 'secretKey',
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: 3600 },
     }),
     WinstonModule.forRoot({
       levels: {
@@ -45,8 +53,14 @@ import { Offer } from './offers/entities/offer.entity';
         info: 4,
       },
       transports: [
-        new winston.transports.Console({ format: winston.format.simple() }),
-        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new winston.transports.Console({
+          format: winston.format.simple(),
+          level: 'error',
+        }),
+        new winston.transports.File({
+          filename: 'error.log',
+          level: 'error',
+        }),
       ],
     }),
     JwtModule,
@@ -57,6 +71,7 @@ import { Offer } from './offers/entities/offer.entity';
     WishlistsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, JwtStrategy],
+  exports: [JwtStrategy, PassportModule],
 })
 export class AppModule {}

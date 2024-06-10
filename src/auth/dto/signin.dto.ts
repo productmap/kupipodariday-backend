@@ -1,12 +1,9 @@
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class SignInDto {
   @IsString()
-  @MinLength(1)
-  @MaxLength(64)
   username: string;
 
   @IsString()
-  @MinLength(2)
   password: string;
 }
