@@ -3,7 +3,7 @@ import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Wish } from './entities/wish.entity';
-import { FindManyOptions, Repository } from 'typeorm';
+import { DataSource, FindManyOptions, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
@@ -11,6 +11,7 @@ export class WishesService {
   constructor(
     @InjectRepository(Wish)
     private wishRepository: Repository<Wish>,
+    private dataSource: DataSource,
   ) {}
 
   async create(user: User, createWishDto: CreateWishDto) {
@@ -48,7 +49,7 @@ export class WishesService {
   async updateById(user: User, id: number, updateWishDto: UpdateWishDto) {
     try {
       const wish = await this.wishRepository.findOne({ where: { id } });
-      if (wish.owner.id === user.id)
+      if (wish || wish.owner.id === user.id)
         return this.wishRepository.update({ id }, updateWishDto);
     } catch {
       throw new NotFoundException('Wish not found');
@@ -74,26 +75,37 @@ export class WishesService {
     );
   }
 
-  async copy(user, id: number) {
+  async copy(user: User, id: number) {
     const wish = await this.wishRepository.findOne({ where: { id } });
     if (!wish) throw new NotFoundException('Wish not found');
 
-    await this.wishRepository.update(
-      { id },
-      {
-        copied: wish.copied + 1,
-      },
-    );
-
-    return this.wishRepository.create({
-      name: wish.name,
-      link: wish.link,
-      image: wish.image,
-      price: wish.price,
-      description: wish.description,
-      owner: user,
-      copied: 0,
-      raised: 0,
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.manager.update(
+        Wish,
+        { id },
+        { copied: wish.copied + 1 },
+      );
+      const newWish = this.wishRepository.create({
+        name: wish.name,
+        link: wish.link,
+        image: wish.image,
+        price: wish.price,
+        description: wish.description,
+        owner: user,
+        copied: 0,
+        raised: 0,
+      });
+      await queryRunner.manager.save(newWish);
+      await queryRunner.commitTransaction();
+      return newWish;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw new NotFoundException('Wish not copied');
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
